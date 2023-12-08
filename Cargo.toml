@@ -1,0 +1,17 @@
+[package]
+name = "srr"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+jsonrpc = "0.16.0"
+serde_json = { version = "1.0", features = ["raw_value"] }
+hex = "0.4.3"
+
+zcash_primitives = "0.13.0"
+zcash_client_backend = "0.10.0"
+
+zebra-scan = {path = "../zebra/zebra-scan"}
+zebra-chain = {path = "../zebra/zebra-chain"}
