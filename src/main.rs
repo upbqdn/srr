@@ -18,24 +18,32 @@ mod tests;
 pub fn main() {
     let network = zcash_primitives::consensus::Network::MainNetwork;
     let storage = Storage::new(&Config::default(), zebra_network(&network), true);
-    let keys = storage.sapling_keys();
 
-    for (key, _) in keys.iter() {
-        let dfvk = sapling_key_to_scan_block_keys(key, zebra_network(&network)).unwrap();
-        let dfvk = dfvk.0.into_iter().next().unwrap();
-        let ufvk = UnifiedFullViewingKey::new(Some(dfvk), None).unwrap();
-        let ufvk_with_acc_id = HashMap::from([(AccountId::from(1), ufvk)]);
+    for (key, _) in storage.sapling_keys().iter() {
+        let dfvk = sapling_key_to_scan_block_keys(key, zebra_network(&network))
+            .unwrap()
+            .0
+            .into_iter()
+            .next()
+            .unwrap();
+
+        let ufvk_with_acc_id = HashMap::from([(
+            AccountId::from(1),
+            UnifiedFullViewingKey::new(Some(dfvk), None).unwrap(),
+        )]);
+
         for (height, txids) in storage.sapling_results(key) {
             let height = BlockHeight::from_u32(height.0);
-            let branch_id = BranchId::for_height(&network, height);
 
             for txid in txids.iter() {
                 let txid = format!("\"{}\"", hex::encode(<[u8; 32]>::from(*txid)));
-                let tx_bytes = hex::decode(&get_tx_via_rpc(txid)).unwrap();
-                let tx = Transaction::read(&tx_bytes[..], branch_id).unwrap();
-                let outputs = decrypt_transaction(&network, height, &tx, &ufvk_with_acc_id);
+                let tx = Transaction::read(
+                    &hex::decode(&get_tx_via_rpc(txid)).unwrap()[..],
+                    BranchId::for_height(&network, height),
+                )
+                .unwrap();
 
-                for output in outputs.iter() {
+                for output in decrypt_transaction(&network, height, &tx, &ufvk_with_acc_id).iter() {
                     let memo = memo_bytes_to_string(output.memo.as_array());
 
                     if !memo.is_empty() && !memo.contains("LIKE:") && !memo.contains("VOTE:") {
