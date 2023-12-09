@@ -45,7 +45,7 @@ pub fn main() {
                 .unwrap();
 
                 for output in decrypt_transaction(&network, height, &tx, &ufvk_with_acc_id) {
-                    let memo = memo_bytes_to_str(output.memo.as_array());
+                    let memo = memo_bytes_to_string(output.memo.as_array());
 
                     if !memo.is_empty()
                         && !memo.contains("LIKE:")
@@ -62,7 +62,7 @@ pub fn main() {
 }
 
 /// Trims trailing zeroes from a memo, and returns the memo as a string.
-fn memo_bytes_to_str(memo: &[u8; 512]) -> String {
+fn memo_bytes_to_string(memo: &[u8; 512]) -> String {
     match memo.iter().rposition(|&byte| byte != 0) {
         Some(i) => std::str::from_utf8(&memo[..=i]).unwrap_or("").to_owned(),
         None => "".to_owned(),
