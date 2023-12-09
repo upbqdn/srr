@@ -18,6 +18,7 @@ mod tests;
 pub fn main() {
     let network = zcash_primitives::consensus::Network::MainNetwork;
     let storage = Storage::new(&Config::default(), zebra_network(&network), true);
+    let mut prev_memo = "".to_owned();
 
     for (key, _) in storage.sapling_keys().iter() {
         let dfvk = sapling_key_to_scan_block_keys(key, zebra_network(&network))
@@ -43,11 +44,16 @@ pub fn main() {
                 )
                 .unwrap();
 
-                for output in decrypt_transaction(&network, height, &tx, &ufvk_with_acc_id).iter() {
-                    let memo = memo_bytes_to_string(output.memo.as_array());
+                for output in decrypt_transaction(&network, height, &tx, &ufvk_with_acc_id) {
+                    let memo = memo_bytes_to_str(output.memo.as_array());
 
-                    if !memo.is_empty() && !memo.contains("LIKE:") && !memo.contains("VOTE:") {
+                    if !memo.is_empty()
+                        && !memo.contains("LIKE:")
+                        && !memo.contains("VOTE:")
+                        && memo != prev_memo
+                    {
                         println!("{memo}\n");
+                        prev_memo = memo;
                     }
                 }
             }
@@ -56,10 +62,10 @@ pub fn main() {
 }
 
 /// Trims trailing zeroes from a memo, and returns the memo as a string.
-fn memo_bytes_to_string(memo: &[u8; 512]) -> &str {
+fn memo_bytes_to_str(memo: &[u8; 512]) -> String {
     match memo.iter().rposition(|&byte| byte != 0) {
-        Some(index) => std::str::from_utf8(&memo[..=index]).unwrap_or(""),
-        None => "",
+        Some(i) => std::str::from_utf8(&memo[..=i]).unwrap_or("").to_owned(),
+        None => "".to_owned(),
     }
 }
 
