@@ -1,5 +1,7 @@
 # 🦓's Scanning Results Reader
 
+> Notice: the repo is unmaintained.
+
 `srr` (pronounced sir) is a trivial utility for displaying Zebra's scanning
 results.
 
